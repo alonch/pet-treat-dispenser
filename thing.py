@@ -38,7 +38,7 @@ def create_iot_client():
   import config
   client = AWSIoTMQTTClient(config.thing)
   client.configureEndpoint(config.server, 8883)
-  client.configureCredentials(config.cert_ca, config.private_key, config.cert_public)
+  client.configureCredentials(config.ca_cert, config.private_key, config.public_cert)
   client.configureOfflinePublishQueueing(-1)  # Infinite offline Publish queueing
   client.configureDrainingFrequency(2)  # Draining: 2 Hz
   client.configureConnectDisconnectTimeout(10)  # 10 sec
