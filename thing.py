@@ -3,33 +3,41 @@ import time
 import picamera
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import traceback
+ready = True
 
 def main():
+  global ready
   iot = create_iot_client()
   print("connecting")
   iot.connect()
   print("connected")
-
   try:
     counter = 0
     for frame in camera_frames():
-      print("publishing: %d bytes" % len(frame))
-      iot.publish("camera/frame", frame, 0)
+      #if ready:
+      print("publishing: %d" % counter)
+      #  ready = False
+      iot.publish("camera/frame", bytearray(frame), 0)
       counter += 1
-      if counter is 120:
+      if counter is 1:
         break
   except:
     iot.disconnect()
     traceback.print_exc()
 
+def callback():
+  global ready
+  ready = True
 
 def camera_frames():
   with picamera.PiCamera() as camera:
     # let camera warm up
+    camera.resolution = (640, 480)
+    camera.framerate = 2
     time.sleep(2)
-
+    
     stream = io.BytesIO()
-    for _ in camera.capture_continuous(stream, 'jpeg', use_video_port=True):
+    for _ in camera.capture_continuous(stream, 'jpeg', use_video_port=True, quality=35):
       stream.seek(0)
       yield stream.read()
 
