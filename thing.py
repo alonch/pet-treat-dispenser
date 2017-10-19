@@ -5,7 +5,6 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
 def main():
   iot = create_iot_client()
-
   print("connecting")
   iot.connect()
   print("connected")
@@ -47,3 +46,5 @@ def create_iot_client():
   return client
   
 
+if __name__ == '__main__':
+  main()
