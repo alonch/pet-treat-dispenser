@@ -2,6 +2,7 @@ import io
 import time
 import picamera
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+import traceback
 
 def main():
   iot = create_iot_client()
@@ -19,6 +20,7 @@ def main():
         break
   except:
     iot.disconnect()
+    traceback.print_exc()
 
 
 def camera_frames():
