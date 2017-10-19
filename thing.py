@@ -13,6 +13,7 @@ def main():
   try:
     counter = 0
     for frame in camera_frames():
+      print("publishing: %d bytes" % len(frame))
       iot.publish("camera/frame", frame, 0)
       counter += 1
       if counter is 120:
