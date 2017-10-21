@@ -3,31 +3,64 @@ import time
 import picamera
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import traceback
-ready = True
+
+from queue import Queue
 
 def main():
-  global ready
+  options = {}
+  queue = Queue()
+  
   iot = create_iot_client()
   print("connecting")
   iot.connect()
   print("connected")
   try:
-    counter = 0
-    for frame in camera_frames():
-      #if ready:
-      print("publishing: %d" % counter)
-      #  ready = False
-      iot.publish("camera/frame", bytearray(frame), 0)
-      counter += 1
-      if counter is 1:
-        break
+    iot.subscribe("camera/activate", 1, lambda client, userdata, message: queue.put({'type':'camera/activate', 'args':{'client':client, 'userdata':userdad, 'message':message}}))
+
+    actions = {
+      'camera/activate':on_camera_activate,
+      'camera/frame':camera_frame_loop
+    }
+    while True:
+      event = queue.get(block=True)
+      actions[event['type']](event['type'], event['args'], iot, options)
   except:
     iot.disconnect()
     traceback.print_exc()
 
-def callback():
-  global ready
-  ready = True
+def on_camera_activate(type, args, iot, options):
+  
+  if not args['message']:
+    options['camera'] = False
+    return
+
+  if 'start_time' in options:
+    print("already running")
+    return
+
+  options['camera'] = True
+  queue.put({'type':'camera/frame', 'args':{}})
+    
+
+
+def camera_frame_loop(type, args, iot, options):
+  
+  if 'camera' in options:
+    if not options['camera']
+      print("stop camera")
+      options['frames'].stop()
+      del options['frames']
+      del options['camera']
+      del options['start_time']
+      return
+
+    print("start camera")
+    options['start_time'] = time.time()
+    options['frames'] = camera_frames():
+    del options['camera']
+
+  iot.publish("camera/frame", bytearray(next(options['frames'])), 0)
+  queue.put({'type':'camera/frame', 'args':{}})
 
 def camera_frames():
   with picamera.PiCamera() as camera:
