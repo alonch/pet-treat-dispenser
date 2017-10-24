@@ -49,7 +49,7 @@ def on_camera_activate(type, args, queue, iot, options):
 def on_camera_degree(type, args, queue, iot, options):
   GPIO.setup(11,GPIO.OUT)
   motor_pwm = GPIO.PWM(11,50)
-  motor_pwm.start(args['message'].payload)
+  motor_pwm.start(float(args['message'].payload))
   time.sleep(.1)
   motor_pwm.close()
 
