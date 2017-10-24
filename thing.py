@@ -3,8 +3,12 @@ import time
 import picamera
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import traceback
-
 from queue import Queue
+
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BOARD)
+
+
 
 def main():
   options = {}
@@ -16,21 +20,22 @@ def main():
   print("connected")
   try:
     iot.subscribe("camera/activate", 1, lambda client, userdata, message: queue.put({'type':'camera/activate', 'args':{'client':client, 'userdata':userdad, 'message':message}}))
-
+    iot.subscribe("camera/degree", 1, lambda client, userdata, message: queue.put({'type':'camera/degree', 'args':{'client':client, 'userdata':userdad, 'message':message}}))
     actions = {
       'camera/activate':on_camera_activate,
-      'camera/frame':camera_frame_loop
+      'camera/frame':camera_frame_loop,
+      'camera/degree':on_camera_degree
     }
     while True:
       event = queue.get(block=True)
-      actions[event['type']](event['type'], event['args'], iot, options)
+      actions[event['type']](event['type'], event['args'], queue, iot, options)
   except:
+    GPIO.cleanup()
     iot.disconnect()
     traceback.print_exc()
 
-def on_camera_activate(type, args, iot, options):
-  
-  if not args['message']:
+def on_camera_activate(type, args, queue, iot, options):
+  if not args['message'].payload:
     options['camera'] = False
     return
 
@@ -40,13 +45,17 @@ def on_camera_activate(type, args, iot, options):
 
   options['camera'] = True
   queue.put({'type':'camera/frame', 'args':{}})
-    
 
+def on_camera_degree(type, args, queue, iot, options):
+  GPIO.setup(11,GPIO.OUT)
+  motor_pwm = GPIO.PWM(11,50)
+  motor_pwm.start(args['message'].payload)
+  time.sleep(.1)
+  motor_pwm.close()
 
-def camera_frame_loop(type, args, iot, options):
-  
+def camera_frame_loop(type, args, queue, iot, options):
   if 'camera' in options:
-    if not options['camera']
+    if not options['camera']:
       print("stop camera")
       options['frames'].stop()
       del options['frames']
@@ -65,8 +74,8 @@ def camera_frame_loop(type, args, iot, options):
 def camera_frames():
   with picamera.PiCamera() as camera:
     # let camera warm up
-    camera.resolution = (640, 480)
-    camera.framerate = 2
+    camera.resolution = (412, 660)
+    camera.framerate = 1
     time.sleep(2)
     
     stream = io.BytesIO()
