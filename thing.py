@@ -65,7 +65,7 @@ def camera_frame_loop(type, args, queue, iot, options):
 
     print("start camera")
     options['start_time'] = time.time()
-    options['frames'] = camera_frames():
+    options['frames'] = camera_frames()
     del options['camera']
 
   iot.publish("camera/frame", bytearray(next(options['frames'])), 0)
