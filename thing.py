@@ -19,8 +19,8 @@ def main():
   iot.connect()
   print("connected")
   try:
-    iot.subscribe("camera/activate", 1, lambda client, userdata, message: queue.put({'type':'camera/activate', 'args':{'client':client, 'userdata':userdad, 'message':message}}))
-    iot.subscribe("camera/degree", 1, lambda client, userdata, message: queue.put({'type':'camera/degree', 'args':{'client':client, 'userdata':userdad, 'message':message}}))
+    iot.subscribe("camera/activate", 1, lambda client, userdata, message: queue.put({'type':'camera/activate', 'args':{'client':client, 'userdata':userdata, 'message':message}}))
+    iot.subscribe("camera/degree", 1, lambda client, userdata, message: queue.put({'type':'camera/degree', 'args':{'client':client, 'userdata':userdata, 'message':message}}))
     actions = {
       'camera/activate':on_camera_activate,
       'camera/frame':camera_frame_loop,
